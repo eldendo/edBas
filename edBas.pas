@@ -8,7 +8,8 @@ const lastLine = 9999;
 var line: string;
     lp: integer; // pointer in 'line'
     prog: array[1..lastLine] of string;
-    quit: boolean = true;
+    lc: integer; // line counter in 'prog'
+    terminated: boolean = false;
     
     function number: integer;
     begin
@@ -18,22 +19,37 @@ var line: string;
     
     procedure addLine;
     begin
-	prog[number] := trim(rightStr(line,length(line)-lp))
+	prog[number] := trim(rightStr(line,length(line)-lp+1))
     end;
     
     procedure execLine;
-    
+
 	procedure list;
 	var i: integer;
 	begin
-		for i := 1 to lastLine do if prog[i]<>'' then writeln(i,' ',prog[i])
+	    for i := 1 to lastLine do if prog[i]<>'' then writeln(i,' ',prog[i])
+	end;
+	
+	procedure run;
+	begin
+		lc := 1;
+		while lc <= lastLine do
+		begin
+			if prog[lc] <> '' then begin line := prog[lc]; execLine end;
+			inc(lc)
+		end
 	end;
     
     begin
-	if      leftstr(line,4) = 'LIST' then list
-	else if leftstr(line,4) = 'EXIT' then begin writeln('bye'); quit := true; end
+
+	if      leftStr(line,5) = 'PRINT' then writeln(rightStr(line, length(line)-5))
 	else if leftstr(line,3) = 'REM' then // do nothing
-	else writeln('SYNTAX ERROR') 
+	else if leftStr(line,3) = 'RUN' then run
+	else if leftstr(line,4) = 'LIST' then list
+	else if leftstr(line,3) = 'NEW' then for lc := 1 to lastLine do prog[lc]:=''
+	else if leftstr(line,3) = 'END' then lc := lastLine
+	else if leftstr(line,4) = 'EXIT' then begin writeln('bye'); terminated := true; end
+	else begin writeln('SYNTAX ERROR ', lc); lc := lastLine end 
     end;
 
     procedure evaluate;
@@ -49,10 +65,8 @@ begin
     writeln('| This is a very simple BASIC interpreter |');
     writeln('+-----------------------------------------+');
     writeln;
-    
     repeat // Read Evaluate Loop
-	write('>');
-	readln(line);
+	write('>'); readln(line);
 	evaluate
-    until quit 
+    until terminated 
 end. 
