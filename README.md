@@ -1,2 +1,2 @@
 # edBas
-A very simple BASIC interpreter
+A very simple BASIC interpreter under construction
