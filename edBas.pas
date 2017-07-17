@@ -19,6 +19,7 @@ var line: string;
     
     procedure addLine;
     begin
+	lc := 0;
 	prog[number] := trim(rightStr(line,length(line)-lp+1))
     end;
     
@@ -49,12 +50,13 @@ var line: string;
 	else if leftstr(line,3) = 'NEW' then for lc := 1 to lastLine do prog[lc]:=''
 	else if leftstr(line,3) = 'END' then lc := lastLine
 	else if leftstr(line,4) = 'EXIT' then begin writeln('bye'); terminated := true; end
-	else begin writeln('SYNTAX ERROR ', lc); lc := lastLine end 
+	else begin write('SYNTAX ERROR'); if lc > 0 then write(' in line ', lc); writeln; lc := lastLine end 
     end;
 
     procedure evaluate;
     begin
 	line := upCase(trim(line)); lp := 1;
+	if line = '' then exit;
 	if line[lp] in ['0'..'9'] then addLine else execLine
     end;
 
@@ -63,6 +65,9 @@ begin
     writeln('| edBas  V0.0 DEV                         |');
     writeln('| (c)2017 by ir. Marc Dendooven           |');
     writeln('| This is a very simple BASIC interpreter |');
+    writeln('| edBas is still under construction       |');
+    writeln('| implemented are PRINT(partial), REM,    |');
+    writeln('| RUN,LIST,NEW,END and EXIT               |');   
     writeln('+-----------------------------------------+');
     writeln;
     repeat // Read Evaluate Loop
