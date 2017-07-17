@@ -1,2 +1,3 @@
 # edBas
-A very simple BASIC interpreter under construction
+A very simple BASIC interpreter under construction  
+![screenshot](./edBas.png)
