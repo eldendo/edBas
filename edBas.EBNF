@@ -1,0 +1,29 @@
+line = number statement | statement.
+
+statement = 	"PRINT" expr-list |
+		"IF" num-expression relop num-expression |
+		"GOTO" num-expression |
+		"INPUT" var-list |
+		"LET" var = num-expression |
+		"GOSUB" num-expression |
+		"RETURN" | "CLEAR" | "LIST" | "RUN" | "END".
+
+expr-list = expression {"," expression}.
+
+expression = string|num-expression.
+
+var-list = var {, var}.
+
+var = "A" | "B" | ... | "Z".
+
+num-expression = ["+"|"-"] term {("+"|"-") term}.
+
+term = factor {("*"|"/" factor}.
+
+factor = number | var | "(" num-expression ")".
+
+number = digit {digit}.
+
+digit = "0" | "1" | ... | "9".
+
+relop = "<"[">"|"="] | ">"["="] | "=".
