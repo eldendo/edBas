@@ -1,12 +1,12 @@
 line = number statement | statement.
 
 statement = 	"PRINT" expr-list |
-		"IF" num-expression relop num-expression |
+		"IF" num-expression relop num-expression "THEN" statement |
 		"GOTO" num-expression |
 		"INPUT" var-list |
 		"LET" var = num-expression |
 		"GOSUB" num-expression |
-		"RETURN" | "CLEAR" | "LIST" | "RUN" | "END".
+		"RETURN" | "CLEAR" | "LIST" | "RUN" | "END" | "LOAD" | "SAVE".
 
 expr-list = expression {"," expression}.
 

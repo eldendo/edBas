@@ -1,7 +1,7 @@
 (* a very simple basic interpreter
 * (c)2017 by ir. Marc Dendooven *)
 program edBas;
-uses sysutils;
+uses sysutils, strutils;
 
 const lastLine = 9999; 
 
@@ -169,17 +169,69 @@ var line: string;
 	    getCh;
 	    vars[v]:=num_expression
 	end;
-    
+	
+	procedure new;
+	begin
+	    for lc := 1 to lastLine do prog[lc]:=''
+	end; 
+	
+	procedure save;
+	var i: integer;
+	    f: text;
+	begin
+	    assign(f,'default.bas');
+	    rewrite(f);
+	    for i := 1 to lastLine do if prog[i]<>'' then writeln(f,i,' ',prog[i]);
+	    close(f)
+	end;
+	
+    	procedure load;
+	var f: text;
+	begin
+	    new;
+	    assign(f,'default.bas');
+	    reset(f);
+	    while not eof(f) do begin readln(f,line); setCh(1); addLine end;
+	    close(f)
+	end;
+	
+	procedure ifThen;
+	var first: integer;
+	    relop: boolean;
+	begin
+	    first := num_expression;
+	    case ch of
+		'<': begin
+			getCh;
+			if ch = '=' then begin getCh; if first <= num_expression then relop:=true else relop:=false end
+			            else if first < num_expression then relop:=true else relop:=false 
+		     end;
+		'>': begin
+			getCh;
+			if ch = '=' then begin getCh; if first >= num_expression then relop:=true else relop:=false end
+			            else if first > num_expression then relop:=true else relop:=false 
+		     end;
+		'=': begin getCh; if first = num_expression then relop:=true else relop:=false end
+		else syntax_error
+	    end;
+	    if MidStr(line,lp,4) <> 'THEN' then syntax_error;
+	    setCh(lp+5);
+	    if relop then begin line := trim(rightStr(line,length(line)-lp+1)) ;execLine end 
+	end;
+	
     begin
 
 	if      leftStr(line,5) = 'PRINT' then begin setCh(6); writeln(expr_list) end
 	else if leftstr(line,4) = 'GOTO' then begin setCh(5); lc := num_expression-1 end	
 	else if leftstr(line,3) = 'LET' then begin setCh(4); let; end
+	else if leftstr(line,2) = 'IF' then begin setCh(3); ifThen; end	
 	else if leftstr(line,3) = 'REM' then // do nothing
 	else if leftStr(line,3) = 'RUN' then run
 	else if leftstr(line,4) = 'LIST' then list
-	else if leftstr(line,3) = 'NEW' then for lc := 1 to lastLine do prog[lc]:=''
+	else if leftstr(line,3) = 'NEW' then new
 	else if leftstr(line,3) = 'END' then lc := lastLine
+	else if leftstr(line,4) = 'LOAD' then load
+	else if leftstr(line,4) = 'SAVE' then save
 	else if leftstr(line,4) = 'EXIT' then begin writeln('bye'); terminated := true; end
 	else syntax_error 
     end;
@@ -193,12 +245,12 @@ var line: string;
 
 begin
     writeln('+-----------------------------------------+');
-    writeln('| edBas  V0.0 DEV                         |');
+    writeln('| edBas  V0.1 DEV                         |');
     writeln('| (c)2017 by ir. Marc Dendooven           |');
     writeln('| This is a very simple BASIC interpreter |');
     writeln('| edBas is still under construction       |');
     writeln('| implemented are expression evaluator,   |');
-    writeln('| PRINT,GOTO,LET,REM,                     |');
+    writeln('| PRINT,GOTO,LET,REM,LOAD,SAVE,IF,THEN,   |');
     writeln('| RUN,LIST,NEW,END and EXIT               |');   
     writeln('+-----------------------------------------+');
     writeln;
