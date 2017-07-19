@@ -117,6 +117,7 @@ var line: string;
 	
 	begin //num_expression
 //	    writeln('num_ex');
+	    skipWhite;
 	    minus := false;
 	    case ch of
 	    '+': getch;
@@ -156,10 +157,24 @@ var line: string;
 //	    writeln('expr-list');
 	    expr_list := expression; while ch = ',' do begin getCh; expr_List := expr_list+expression end;
 	end;
+	
+	procedure let;
+	var v: integer;
+	begin
+	    skipWhite;
+	    if ch in ['A'..'Z'] then v := ord(ch)-ord('A')+1 else syntax_error;
+	    getCh;
+	    skipWhite;
+	    if ch <> '=' then syntax_error;
+	    getCh;
+	    vars[v]:=num_expression
+	end;
     
     begin
 
 	if      leftStr(line,5) = 'PRINT' then begin setCh(6); writeln(expr_list) end
+	else if leftstr(line,4) = 'GOTO' then begin setCh(5); lc := num_expression-1 end	
+	else if leftstr(line,3) = 'LET' then begin setCh(4); let; end
 	else if leftstr(line,3) = 'REM' then // do nothing
 	else if leftStr(line,3) = 'RUN' then run
 	else if leftstr(line,4) = 'LIST' then list
@@ -183,7 +198,7 @@ begin
     writeln('| This is a very simple BASIC interpreter |');
     writeln('| edBas is still under construction       |');
     writeln('| implemented are expression evaluator,   |');
-    writeln('| PRINT, REM,                             |');
+    writeln('| PRINT,GOTO,LET,REM,                     |');
     writeln('| RUN,LIST,NEW,END and EXIT               |');   
     writeln('+-----------------------------------------+');
     writeln;
