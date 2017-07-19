@@ -3,15 +3,34 @@
 program edBas;
 uses sysutils, strutils;
 
-const lastLine = 9999; 
+const lastLine = 9999;
+      maxStack = 20;
 
 var line: string;
     lp: integer; // pointer in 'line'
+    
     prog: array[1..lastLine] of string;
     lc: integer; // line counter in 'prog'
+    
     vars: array[1..26] of integer;
+    
+    stack: array[1..maxStack] of integer;
+    sp: integer = 1; //stackpointer
+    
     terminated: boolean = false;
     ch: char;
+    
+    procedure push(l: integer);
+    begin
+	if SP <= maxStack then begin stack[SP] := l; inc(SP) end
+			 else begin writeln('STACK OVERFLOW'); lc := lastLine end
+    end;
+    
+    function pop: integer;
+    begin
+	if SP > 1 then begin dec(SP); pop := stack[SP] end
+		  else begin writeln('RETURN WITHOUT GOSUB'); lc := lastLine end
+    end;
 
     procedure syntax_error;
     begin
@@ -158,6 +177,8 @@ var line: string;
 	    expr_list := expression; while ch = ',' do begin getCh; expr_List := expr_list+expression end;
 	end;
 	
+
+	
 	procedure let;
 	var v: integer;
 	begin
@@ -168,6 +189,19 @@ var line: string;
 	    if ch <> '=' then syntax_error;
 	    getCh;
 	    vars[v]:=num_expression
+	end;
+	
+	procedure varlist;
+	
+	    procedure rdVar;
+	    begin
+		skipWhite;
+		if ch in ['A'..'Z'] then readLn(vars[ord(ch)-ord('A')+1]);
+		getCh
+	    end;
+	
+	begin
+	    rdVar; while ch = ',' do begin getCh; rdVar end;
 	end;
 	
 	procedure new;
@@ -225,6 +259,9 @@ var line: string;
 	else if leftstr(line,4) = 'GOTO' then begin setCh(5); lc := num_expression-1 end	
 	else if leftstr(line,3) = 'LET' then begin setCh(4); let; end
 	else if leftstr(line,2) = 'IF' then begin setCh(3); ifThen; end	
+	else if leftstr(line,5) = 'GOSUB' then begin setCh(6); push(lc); lc := num_expression-1 end
+	else if leftstr(line,6) = 'RETURN' then lc := pop		
+	else if leftstr(line,5) = 'INPUT' then begin setCh(6);varList end	
 	else if leftstr(line,3) = 'REM' then // do nothing
 	else if leftStr(line,3) = 'RUN' then run
 	else if leftstr(line,4) = 'LIST' then list
@@ -251,7 +288,8 @@ begin
     writeln('| edBas is still under construction       |');
     writeln('| implemented are expression evaluator,   |');
     writeln('| PRINT,GOTO,LET,REM,LOAD,SAVE,IF,THEN,   |');
-    writeln('| RUN,LIST,NEW,END and EXIT               |');   
+    writeln('| RUN,LIST,NEW,END,INPUT,GOSUB,RETURN     |');
+    writeln('| and EXIT.                               |');   
     writeln('+-----------------------------------------+');
     writeln;
     repeat // Read Evaluate Loop
