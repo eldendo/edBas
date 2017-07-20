@@ -6,9 +6,10 @@ statement = 	"PRINT" expr-list |
 		"INPUT" var-list |
 		"LET" var = num-expression |
 		"GOSUB" num-expression |
-		"RETURN" | "CLEAR" | "LIST" | "RUN" | "END" | "LOAD" | "SAVE".
+		"RETURN" | "CLEAR" | "LIST" |
+		"RUN" | "END" | "LOAD" | "SAVE" | "EXIT".
 
-expr-list = expression {"," expression}.
+expr-list = expression {(","|";") expression}.
 
 expression = string|num-expression.
 

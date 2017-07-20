@@ -18,36 +18,33 @@ var line: string;
     sp: integer = 1; //stackpointer
     
     terminated: boolean = false;
+    running: boolean = false;
     ch: char;
-    
+ 
+    procedure fatal(e:string);
+    begin
+	write(e); 
+	if running then write(' in line ', lc); writeln; 
+	running := false
+    end;
+ 
     procedure push(l: integer);
     begin
 	if SP <= maxStack then begin stack[SP] := l; inc(SP) end
-			 else begin writeln('STACK OVERFLOW'); lc := lastLine end
+			 else fatal('STACK OVERFLOW')
     end;
     
     function pop: integer;
     begin
 	if SP > 1 then begin dec(SP); pop := stack[SP] end
-		  else begin writeln('RETURN WITHOUT GOSUB'); lc := lastLine end
+		  else fatal('RETURN WITHOUT GOSUB')
     end;
 
-    procedure syntax_error;
-    begin
-	write('SYNTAX ERROR'); 
-	if lc > 0 then write(' in line ', lc); writeln; 
-	lc := lastLine
-    end;
-
-    
     procedure getCh;
     begin
-//	    writeln('getCh');
 	inc(lp);
 	if lp <= length(line) then ch := line[lp] else ch := #0;
-//	    writeln('***',ch)
     end;
-
 		
     procedure setCh(pos: integer);
     begin
@@ -55,7 +52,6 @@ var line: string;
 	getCh;
     end;
  
-    
     function number: integer;
     begin
 	number := 0;    
@@ -64,7 +60,6 @@ var line: string;
     
     procedure addLine;
     begin
-	lc := 0; // bijgevoegd voor syntax error in command line ???
 	prog[number] := trim(rightStr(line,length(line)-lp+1))
     end;
     
@@ -79,18 +74,17 @@ var line: string;
 	procedure run;
 	begin
 		lc := 1;
-		while lc <= lastLine do
+		SP := 1;
+		running := true;
+		while running and(lc <= lastLine)  do
 		begin
 			if prog[lc] <> '' then begin line := prog[lc]; execLine end;
 			inc(lc)
 		end
 	end;
 	
-
-    
 	procedure skipWhite;
 	begin
-//	    writeln('skipWhite');
 	    while ch in [#1..#32] do getCh
 	end;
 	
@@ -104,25 +98,20 @@ var line: string;
 	    
 		function factor: integer;
 		begin
-//		    writeln('factor');
-//		    skipwhite;
 		    case ch of
 		    'A'..'Z': begin factor := vars[ord(ch)-ord('A')+1]; getCh end;
 		    '0'..'9': factor := number;
 		    '(': begin 
 			    getCh; 
-//			    writeln('---',ch); 
 			    factor := num_expression(); 
-//			    writeln('***',ch);
-			    if ch <> ')' then syntax_error;
+			    if ch <> ')' then fatal('SYNTAX ERROR');
 			    getCh
 			 end
-		    else syntax_error
+		    else fatal('SYNTAX ERROR')
 		    end
 		end;
 	    
 	    begin //term
-//		writeln('term');
 		term := factor;
 		while ch in ['*','/'] do
 		    begin
@@ -135,7 +124,6 @@ var line: string;
 	    end;
 	
 	begin //num_expression
-//	    writeln('num_ex');
 	    skipWhite;
 	    minus := false;
 	    case ch of
@@ -155,16 +143,15 @@ var line: string;
 		end
 	end;
 	
-	function expr_list: string;
+	procedure expr_list;
+	var cr: boolean;
 	
 	    function expression: string;
 	    begin
-//		writeln('expr');
 		expression := '';
 		skipWhite;
-//		writeln('ch=',ch);
+		if ch = #0 then exit;
 		if ch = '"' then begin 
-//				    writeln('***string');
 				    getCh; 
 				    while ch <> '"' do begin expression := expression+ch; getCh end;
 				    getCh
@@ -173,20 +160,23 @@ var line: string;
 	    end;
 	
 	begin //expr_list
-//	    writeln('expr-list');
-	    expr_list := expression; while ch = ',' do begin getCh; expr_List := expr_list+expression end;
+	    write(expression);
+	    cr := true;
+	    while ch in [',',';'] do begin
+					if ch = ',' then write('      ');
+					getCh; if ch = #0 then cr := false else write(expression); 
+				     end;
+	    if cr then writeln;
 	end;
-	
-
 	
 	procedure let;
 	var v: integer;
 	begin
 	    skipWhite;
-	    if ch in ['A'..'Z'] then v := ord(ch)-ord('A')+1 else syntax_error;
+	    if ch in ['A'..'Z'] then v := ord(ch)-ord('A')+1 else fatal('SYNTAX ERROR');
 	    getCh;
 	    skipWhite;
-	    if ch <> '=' then syntax_error;
+	    if ch <> '=' then fatal('SYNTAX ERROR');
 	    getCh;
 	    vars[v]:=num_expression
 	end;
@@ -246,16 +236,15 @@ var line: string;
 			            else if first > num_expression then relop:=true else relop:=false 
 		     end;
 		'=': begin getCh; if first = num_expression then relop:=true else relop:=false end
-		else syntax_error
+		else fatal('SYNTAX ERROR')
 	    end;
-	    if MidStr(line,lp,4) <> 'THEN' then syntax_error;
+	    if MidStr(line,lp,4) <> 'THEN' then fatal('SYNTAX ERROR');
 	    setCh(lp+5);
 	    if relop then begin line := trim(rightStr(line,length(line)-lp+1)) ;execLine end 
 	end;
 	
     begin
-
-	if      leftStr(line,5) = 'PRINT' then begin setCh(6); writeln(expr_list) end
+	if      leftStr(line,5) = 'PRINT' then begin setCh(6); expr_list end
 	else if leftstr(line,4) = 'GOTO' then begin setCh(5); lc := num_expression-1 end	
 	else if leftstr(line,3) = 'LET' then begin setCh(4); let; end
 	else if leftstr(line,2) = 'IF' then begin setCh(3); ifThen; end	
@@ -270,7 +259,7 @@ var line: string;
 	else if leftstr(line,4) = 'LOAD' then load
 	else if leftstr(line,4) = 'SAVE' then save
 	else if leftstr(line,4) = 'EXIT' then begin writeln('bye'); terminated := true; end
-	else syntax_error 
+	else fatal('SYNTAX ERROR') 
     end;
 
     procedure evaluate;
@@ -280,7 +269,7 @@ var line: string;
 	if line[lp] in ['0'..'9'] then addLine else execLine
     end;
 
-begin
+begin // main
     writeln('+-----------------------------------------+');
     writeln('| edBas  V0.1 DEV                         |');
     writeln('| (c)2017 by ir. Marc Dendooven           |');
