@@ -62,6 +62,17 @@ var line: string;
     begin
 	prog[number] := trim(rightStr(line,length(line)-lp+1))
     end;
+ 
+    procedure clear;
+    var i: integer;
+    begin
+	for i := 1 to 26 do vars[i] := 0
+    end;
+    
+    procedure new;
+    begin
+	for lc := 1 to lastLine do prog[lc]:=''
+    end; 
     
     procedure execLine;
 
@@ -75,6 +86,7 @@ var line: string;
 	begin
 		lc := 1;
 		SP := 1;
+		clear;
 		running := true;
 		while running and(lc <= lastLine)  do
 		begin
@@ -194,11 +206,6 @@ var line: string;
 	    rdVar; while ch = ',' do begin getCh; rdVar end;
 	end;
 	
-	procedure new;
-	begin
-	    for lc := 1 to lastLine do prog[lc]:=''
-	end; 
-	
 	procedure save;
 	var i: integer;
 	    f: text;
@@ -253,6 +260,7 @@ var line: string;
 	else if leftstr(line,5) = 'INPUT' then begin setCh(6);varList end	
 	else if leftstr(line,3) = 'REM' then // do nothing
 	else if leftStr(line,3) = 'RUN' then run
+	else if leftstr(line,5) = 'CLEAR' then clear	
 	else if leftstr(line,4) = 'LIST' then list
 	else if leftstr(line,3) = 'NEW' then new
 	else if leftstr(line,3) = 'END' then lc := lastLine
@@ -271,16 +279,14 @@ var line: string;
 
 begin // main
     writeln('+-----------------------------------------+');
-    writeln('| edBas  V0.1 DEV                         |');
+    writeln('| Welcome to edBas  V0.1 DEV              |');
     writeln('| (c)2017 by ir. Marc Dendooven           |');
     writeln('| This is a very simple BASIC interpreter |');
     writeln('| edBas is still under construction       |');
-    writeln('| implemented are expression evaluator,   |');
-    writeln('| PRINT,GOTO,LET,REM,LOAD,SAVE,IF,THEN,   |');
-    writeln('| RUN,LIST,NEW,END,INPUT,GOSUB,RETURN     |');
-    writeln('| and EXIT.                               |');   
     writeln('+-----------------------------------------+');
     writeln;
+    new; 
+    clear;
     repeat // Read Evaluate Loop
 	write('>'); readln(line);
 	evaluate
